@@ -4,82 +4,41 @@
 		<title>Test for link[rel=preload]</title>
 		<meta charset="utf-8">
 
-
-
-		<link rel="preload" href="http://scottjehl.com/css-temp/slow.php" as="stylesheet" id="asyncCSS" onload="this.rel='stylesheet'">
-
+		<link rel="preload" href="http://scottjehl.com/css-temp/slow.php" as="style" onload="this.rel='stylesheet'">
 		<script>
+		/*! loadCSS: load a CSS file asynchronously. [c]2016 @scottjehl, Filament Group, Inc. Licensed MIT */
+		!function(e){"use strict";var t=function(t,n,i){var o,a=e.document,d=a.createElement("link"),r=i||"all";if(n)o=n;else{var l=(a.body||a.getElementsByTagName("head")[0]).childNodes;o=l[l.length-1]}var s=a.styleSheets;d.rel="stylesheet",d.href=t,d.media="only x",o.parentNode.insertBefore(d,n?o:o.nextSibling);var f=function(e){for(var t=d.href,n=s.length;n--;)if(s[n].href===t)return e();setTimeout(function(){f(e)})};return d.addEventListener&&d.addEventListener("load",function(){this.media=r}),d.onloadcssdefined=f,f(function(){d.media!==r&&(d.media=r)}),d};"undefined"!=typeof exports?exports.loadCSS=t:e.loadCSS=t}("undefined"!=typeof global?global:this);
 
-			// link rel=preload support test via https://lists.w3.org/Archives/Public/public-whatwg-archive/2015Apr/0013.html
-			function preloadSupported() {
-				var link = document.createElement('link');
-				link.rel = 'PRELOAD';
-				return link.rel == 'preload';
+		/* CSS rel=preload polyfill (from src/cssrelpreload.js) */
+		(function( w ){
+			// rel=preload support test
+			function support(){
+			  try {
+					return w.document.createElement("link").relList.supports( "preload" );
+			  } catch (e) {}
 			}
-
-			/*!
-		loadCSS: load a CSS file asynchronously.
-		[c]2015 @scottjehl, Filament Group, Inc.
-		Licensed MIT
-		*/
-		(function(w){
-			"use strict";
-			/* exported loadCSS */
-			w.loadCSS = function( href, before, media ){
-				// Arguments explained:
-				// `href` [REQUIRED] is the URL for your CSS file.
-				// `before` [OPTIONAL] is the element the script should use as a reference for injecting our stylesheet <link> before
-					// By default, loadCSS attempts to inject the link after the last stylesheet or script in the DOM. However, you might desire a more specific location in your document.
-				// `media` [OPTIONAL] is the media type or query of the stylesheet. By default it will be 'all'
-				var doc = w.document;
-				var ss = doc.createElement( "link" );
-				var ref;
-				if( before ){
-					ref = before;
-				}
-				else {
-					var refs = ( doc.body || doc.getElementsByTagName( "head" )[ 0 ] ).childNodes;
-					ref = refs[ refs.length - 1];
-				}
-
-				var sheets = doc.styleSheets;
-				ss.rel = "stylesheet";
-				ss.href = href;
-				// temporarily set media to something inapplicable to ensure it'll fetch without blocking render
-				ss.media = "only x";
-
-				// Inject link
-					// Note: the ternary preserves the existing behavior of "before" argument, but we could choose to change the argument to "after" in a later release and standardize on ref.nextSibling for all refs
-					// Note: `insertBefore` is used instead of `appendChild`, for safety re: http://www.paulirish.com/2011/surefire-dom-element-insertion/
-				ref.parentNode.insertBefore( ss, ( before ? ref : ref.nextSibling ) );
-				// A method (exposed on return object for external use) that mimics onload by polling until document.styleSheets until it includes the new sheet.
-				var onloadcssdefined = function( cb ){
-					var resolvedHref = ss.href;
-					var i = sheets.length;
-					while( i-- ){
-						if( sheets[ i ].href === resolvedHref ){
-							return cb();
-						}
+			// loop preload links and fetch using loadCSS
+			function poly(){
+				var links = w.document.getElementsByTagName( "link" );
+				for( var i = 0; i < links.length; i++ ){
+					var link = links[ i ];
+					if( link.rel === "preload" ){
+						loadCSS( link.href, link );
+						link.rel = null;
 					}
-					setTimeout(function() {
-						onloadcssdefined( cb );
-					});
-				};
-
-				// once loaded, set link's media back to `all` so that the stylesheet applies once it loads
-				ss.onloadcssdefined = onloadcssdefined;
-				onloadcssdefined(function() {
-					ss.media = media || "all";
-				});
-				return ss;
-			};
-		}(this));
-
-
-			// if link[rel=preload] is not supported, we must fetch the CSS manually using loadCSS
-			if( !preloadSupported() ){
-				loadCSS( asyncCSS.href );
+				}
 			}
+			// if link[rel=preload] is not supported, we must fetch the CSS manually using loadCSS
+			if( !support() ){
+				poly();
+				var run = w.setInterval( poly, 300 );
+				if( w.addEventListener ){
+					w.addEventListener( "load", function(){
+						w.clearInterval( run );
+					} );
+				}
+			}
+		}( this ));
 
 		</script>
 	</head>
