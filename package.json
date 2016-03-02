@@ -1,6 +1,6 @@
 {
   "name": "fg-loadcss",
-  "version": "0.2.4",
+  "version": "1.0.0-0",
   "description": "A function for loading CSS asynchronously",
   "main": "src/loadCSS.js",
   "repository": {
@@ -16,7 +16,7 @@
   "devDependencies": {
     "grunt": "~0.4.5",
     "grunt-cli": "~0.1.13",
-    "grunt-contrib-jshint": "~0.11.0",
+    "grunt-contrib-jshint": "~0.12.0",
     "grunt-contrib-qunit": "~0.7.0"
   },
   "scripts": {

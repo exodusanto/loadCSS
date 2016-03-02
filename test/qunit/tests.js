@@ -33,7 +33,7 @@
 	asyncTest( 'loadCSS loads a CSS file', function(){
 		expect(1);
 		var ss = loadCSS("files/test.css");
-		ss.onloadcssdefined(function(){
+		onloadCSS( ss, function(){
 			ok("stylesheet loaded successfully");
 			start();
 		});
@@ -42,7 +42,7 @@
 	asyncTest( 'loadCSS loads a CSS file with a relative path', function(){
 		expect(1);
 		var ss = loadCSS("../../test/qunit/files/test.css");
-		ss.onloadcssdefined(function(){
+		onloadCSS( ss, function(){
 			ok("stylesheet loaded successfully");
 			start();
 		});
@@ -52,7 +52,7 @@
 		expect(2);
 		var ss = loadCSS("files/test.css");
 		ok(ss.media, initialMedia, "media type begins as" + initialMedia );
-		ss.onloadcssdefined(function(){
+		onloadCSS( ss, function(){
 			equal(ss.media, "all", "media type is all");
 			start();
 		});
@@ -63,7 +63,7 @@
 		var med = "print";
 		var ss = loadCSS("files/test.css", null, med);
 		ok(ss.media, initialMedia, "media type begins as " + initialMedia );
-		ss.onloadcssdefined(function(){
+		onloadCSS( ss, function(){
 			equal(ss.media, med, "media type is " + med);
 			start();
 		});
@@ -74,6 +74,50 @@
 		var elem = window.document.getElementById("before-test");
 		var ss = loadCSS("files/test.css", elem);
 		equal(ss.nextElementSibling, elem );
+	});
+
+	asyncTest( 'onloadCSS callback fires after css is loaded', function(){
+		expect(1);
+		var getStyles = window.getComputedStyle ? function (node) { return window.getComputedStyle(node, null); } : function (node) { return node.currentStyle; };
+		var elem = window.document.createElement("div");
+		elem.className = "bar";
+		document.body.appendChild( elem );
+		var ss = loadCSS("files/test.css?1");
+		onloadCSS( ss, function(){
+			equal(getStyles(elem).backgroundColor, 'rgb(0, 128, 0)', 'background is green' );
+			start();
+		} );
+	});
+
+	test( 'loadCSS preload polyfill methods ', function(){
+		expect(5);
+
+		ok( window.loadCSS.relpreload, "loadCSS.relpreload should exist" );
+		ok( typeof window.loadCSS.relpreload === "object", "relpreload should be an object" );
+		ok( typeof window.loadCSS.relpreload.support === "function", "relpreload.support should be a function" );
+		ok( typeof window.loadCSS.relpreload.poly === "function", "relpreload.poly should be a function" );
+		ok( typeof window.loadCSS.relpreload.support() === "boolean", "relpreload.support should be a bool" );
+	});
+
+	asyncTest( 'rel=preload stylesheet loads via polyfill', function(){
+		expect(1);
+		var preloadElem = document.getElementById("preloadtest");
+		var preloadHref = preloadElem.getAttribute("href");
+		function loaded(){
+			return document.querySelector( 'link[href="'+ preloadHref +'"][rel="stylesheet"]' ) || document.querySelector( 'link[href="'+ preloadElem.href +'"][rel="stylesheet"]' );
+		}
+
+			window.setTimeout(function(){
+				if( window.loadCSS.relpreload.support() ){
+					ok( loaded(), "stylesheet is in dom and applied without a polyfill" );
+				}
+				else {
+					ok( loaded(), "stylesheet is in dom and applied with a polyfill" );
+				}
+
+				start();
+			},3000);
+
 	});
 
 
