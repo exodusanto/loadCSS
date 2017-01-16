@@ -2,7 +2,7 @@
 (function(w){
 	"use strict";
 	/* exported loadCSS */
-	var loadCSS = function( href, before, media ){
+	var loadCSS = function( href, callback, before, media ){
 		// Arguments explained:
 		// `href` [REQUIRED] is the URL for your CSS file.
 		// `before` [OPTIONAL] is the element the script should use as a reference for injecting our stylesheet <link> before
@@ -59,6 +59,11 @@
 				ss.removeEventListener( "load", loadCB );
 			}
 			ss.media = media || "all";
+			
+			// Check/run fallback
+			if(typeof callback === "function"){
+				callback();
+			}
 		}
 
 		// once loaded, set link's media back to `all` so that the stylesheet applies once it loads
